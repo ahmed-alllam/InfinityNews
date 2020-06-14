@@ -7,19 +7,27 @@ class Source(models.Model):
     description = models.TextField()
     website = models.URLField()
 
+    def __str__(self):
+        return self.title
 
-class SourceCategory(models.Model):
-    source = models.ForeignKey(Source, on_delete=models.CASCADE)
+
+class Category(models.Model):
     title = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.title
 
 
 class PostTag(models.Model):
     tag = models.CharField(max_length=30, unique=True)
 
+    def __str__(self):
+        return self.tag
+
 
 class Post(models.Model):
     source = models.ForeignKey(Source, on_delete=models.CASCADE)
-    category = models.ForeignKey(SourceCategory, on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
     tags = models.ManyToManyField(PostTag)
     title = models.CharField(max_length=1024)
     description = models.TextField()
@@ -28,6 +36,9 @@ class Post(models.Model):
     body = models.TextField()
     timestamp = models.DateTimeField()
 
+    def __str__(self):
+        return self.title
+
 
 class Comment(models.Model):
     # user = models.ForeignKey('users.User', on_delete=models.CASCADE)
@@ -35,3 +46,6 @@ class Comment(models.Model):
     title = models.CharField(max_length=100)
     body = models.TextField()
     timestamp = models.DateTimeField()
+
+    def __str__(self):
+        return self.title
