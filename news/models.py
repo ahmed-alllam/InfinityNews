@@ -34,7 +34,7 @@ class Post(models.Model):
     image = models.ImageField(null=True)
     detail_url = models.URLField()
     body = models.TextField()
-    timestamp = models.DateTimeField()
+    timestamp = models.DateTimeField(null=True)
 
     def __str__(self):
         return self.title
