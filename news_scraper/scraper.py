@@ -69,6 +69,7 @@ class BaseNewsScraper:
         self.time_between_requests = time_between_requests
         self.timezone = timezone
         self.max_scraped_pages = max_scraped_pages
+        self.session = requests.session()
 
     def scrape(self):
         source = Source.objects.get_or_create(title=self.title)[0]
@@ -83,12 +84,18 @@ class BaseNewsScraper:
         has_next = True
         page_index = 1
         category_posts = []
-        while has_next and page_index <= self.max_scraped_pages:  # won't scrape more than 3 pages by default
-            time.sleep(self.time_between_requests)
-            page = self.get_page_at_index(url, page_index)
-            page_posts, has_next = self.scrape_page(source, category, url, page)
+        while has_next and page_index <= self.get_max_scraped_pages(title):  # won't scrape more than 3 pages by default
+            try:
+                time.sleep(self.time_between_requests)
+                page = self.get_page_at_index(url, page_index)
+                page_posts, has_next = self.scrape_page(source, category, url, page)
+            except AssertionError:
+                print("Error Parsing Page")
+                continue
+            finally:
+                page_index += 1
+
             category_posts.extend(page_posts)
-            page_index += 1
         return category_posts
 
     def scrape_page(self, source, category, category_url, page):
@@ -96,7 +103,12 @@ class BaseNewsScraper:
 
         for posts_list_container in self.get_posts_list_containers(page):
             for post_container in self.get_post_containers(posts_list_container):
-                post, tags = self.scrape_post(source, category, category_url, post_container)
+                try:
+                    post, tags = self.scrape_post(source, category, category_url, post_container)
+                except AssertionError:
+                    print("Error Parsing Post")
+                    continue
+
                 if Post.objects.filter(source=source, category=category, title=post.title,
                                        detail_url=post.detail_url).exists():
                     return posts, False
@@ -112,7 +124,7 @@ class BaseNewsScraper:
         url = self.get_post_url(post_container, category_url)
 
         time.sleep(self.time_between_requests)
-        detailed_post_container = BeautifulSoup(requests.get(url).content, 'html.parser')
+        detailed_post_container = BeautifulSoup(self.session.get(url).content, 'html.parser')
 
         description = self.get_post_description(post_container, detailed_post_container)
         image = self.get_post_image(post_container, detailed_post_container)
@@ -127,39 +139,62 @@ class BaseNewsScraper:
 
         return post, tags
 
+    def get_max_scraped_pages(self, category):
+        return self.max_scraped_pages
+
     def get_category_url(self, title, url):
         return urljoin(self.base_url, url)
 
     def get_page_at_index(self, url, index):
+        response = self.session.get(self.get_page_url_at_index(url, index))
+
+        assert response.status_code == 200
+
         if self.format == 'html.parser':
-            return BeautifulSoup(requests.get(self.get_page_url_at_index(url, index)).content, self.format)
+            return BeautifulSoup(response.content, self.format)
         elif self.format == 'json':
-            return json.loads(requests.get(self.get_page_url_at_index(url, index)).content)
+            return json.loads(response.content)
 
     def get_page_url_at_index(self, url, index):
         raise NotImplementedError()
 
     def get_posts_list_containers(self, page):
+        containers = []
         if isinstance(page, BeautifulSoup):
-            return page.find_all(self.list_container_tag_name,
-                                 {self.list_container_attr_name:
-                                      re.compile(self.list_container_attr_value + '.*')})
+            attrs = {}
+            if self.list_container_attr_name and self.list_container_attr_value:
+                attrs = {self.list_container_attr_name: re.compile(self.list_container_attr_value + '.*')}
+
+            containers = page.find_all(self.list_container_tag_name, attrs)
+
         elif isinstance(page, list):
-            return [page, ]
+            containers = [page, ]
+
+        assert containers
+        return containers
 
     def get_post_containers(self, posts_list_container):
+        containers = []
         if isinstance(posts_list_container, Tag):
-            return posts_list_container.find_all(self.container_tag_name,
-                                                 {self.container_attr_name:
-                                                      re.compile(self.container_attr_value + '.*')})
+            attrs = {}
+            if self.container_attr_name and self.container_attr_value:
+                attrs = {self.container_attr_name: re.compile(self.container_attr_value + '.*')}
+
+            containers = posts_list_container.find_all(self.container_tag_name, attrs)
+
         elif isinstance(posts_list_container, list):
-            return posts_list_container
+            containers = posts_list_container
+
+        assert containers
+        return containers
 
     def get_post_title(self, post_container):
         if isinstance(post_container, Tag):
-            title = post_container.find(re.compile(self.title_tag_name + '.*'),
-                                        {self.title_attr_name: re.compile(self.title_attr_value + '.*')})
+            attrs = {}
+            if self.title_attr_name and self.title_attr_value:
+                attrs = {self.title_attr_name: re.compile(self.title_attr_value + '.*')}
 
+            title = post_container.find(self.title_tag_name, attrs)
             return title.text.strip() if title else ''
 
         elif isinstance(post_container, dict):
@@ -169,8 +204,11 @@ class BaseNewsScraper:
         url = ''
 
         if isinstance(post_container, Tag):
-            url = post_container.find(self.url_tag_name,
-                                      {self.url_attr_name: self.url_attr_value})['href']
+            attrs = {}
+            if self.url_attr_name and self.url_attr_value:
+                attrs = {self.url_attr_name: re.compile(self.url_attr_value + '.*')}
+
+            url = post_container.find(self.url_tag_name, attrs)['href']
 
         elif isinstance(post_container, dict):
             url = post_container.get(self.url_json_name, '')
@@ -179,9 +217,11 @@ class BaseNewsScraper:
 
     def get_post_description(self, post_container, detailed_post_container):
         if isinstance(post_container, Tag):
-            description = post_container.find(re.compile(self.description_tag_name + '.*'),
-                                              {self.description_attr_name:
-                                                   re.compile(self.description_attr_value + '.*')})
+            attrs = {}
+            if self.description_attr_name and self.description_attr_value:
+                attrs = {self.description_attr_name: re.compile(self.description_attr_value + '.*')}
+
+            description = post_container.find(self.description_tag_name, attrs)
 
             return description.text.strip() if description else ''
 
@@ -192,7 +232,11 @@ class BaseNewsScraper:
         image = ''
 
         if isinstance(post_container, Tag):
-            image = post_container.find(self.image_tag_name)['src']
+            attrs = {}
+            if self.image_attr_name and self.image_attr_value:
+                attrs = {self.image_attr_name: re.compile(self.image_attr_value + '.*')}
+
+            image = post_container.find(self.image_tag_name, attrs)['src']
 
         elif isinstance(post_container, dict):
             image = post_container.get(self.image_json_name, '')
@@ -200,19 +244,25 @@ class BaseNewsScraper:
         return urljoin(self.base_url, image)
 
     def get_post_body(self, post_page):
-        body = post_page.find(self.body_tag_name, {self.body_attr_name:
-                                                       re.compile(self.body_attr_value + '.*')})
+        attrs = {}
+        if self.body_attr_name and self.body_attr_value:
+            attrs = {self.body_attr_name: re.compile(self.body_attr_value + '.*')}
+
+        body = post_page.find(self.body_tag_name, attrs)
         return str(body).strip() if body else ''
 
     def get_post_timestamp(self, post_container, detailed_post_container):
         timestamp = ''
 
         if isinstance(post_container, Tag):
-            timestamp = post_container.find(self.timestamp_tag_name,
-                                            {self.timestamp_attr_name:
-                                                 re.compile(self.timestamp_attr_value + '.*')})
+            attrs = {}
+            if self.timestamp_attr_name and self.timestamp_attr_value:
+                attrs = {self.timestamp_attr_name: re.compile(self.timestamp_attr_value + '.*')}
+
+            timestamp = post_container.find(self.timestamp_tag_name, attrs)
+
         elif isinstance(post_container, dict):
-            post_container.get(self.timestamp_json_name, '')
+            timestamp = post_container.get(self.timestamp_json_name, '')
 
         if not timestamp:
             return None
@@ -228,16 +278,21 @@ class BaseNewsScraper:
 
     def get_post_tag_names(self, post_container, detailed_post_container):
         tags = []
-        for tag in detailed_post_container.find(self.tags_tag_name,
-                                                {self.tags_attr_name:
-                                                     re.compile(self.tags_attr_value + '.*')}).find_all('a'):
-            tags.append(tag.text.strip())
+        attrs = {}
+        if self.tags_attr_name and self.tags_attr_value:
+            attrs = {self.tags_attr_name: re.compile(self.tags_attr_value + '.*')}
+
+        tags_container = detailed_post_container.find(self.tags_tag_name, attrs)
+
+        if tags_container:
+            for tag in tags_container.find_all('a'):
+                tags.append(tag.text.strip())
         return tags
 
 
 class Youm7Scraper(BaseNewsScraper):
     def __init__(self):
-        super().__init__('youm7', 'https://www.youm7.com',
+        super().__init__('اليوم السابع', 'https://www.youm7.com',
                          {'Breaking News': 'Section/أخبار-عاجلة/65/x',
                           'Politics': 'Section/سياسة/319/x', 'Reports': 'Section/تقارير-مصرية/97/x',
                           'Culture': 'Section/ثقافة/94/x', 'Accidents': 'Section/حوادث/203/x',
@@ -331,3 +386,57 @@ class FoxBusinessScraper(BaseNewsScraper):
 
 
 fox_business_scraper = FoxBusinessScraper()
+
+
+class ShoroukNewsScraper(BaseNewsScraper):
+    def __init__(self):
+        super().__init__('الشروق', 'https://www.shorouknews.com',
+                         {'Egypt News': 'egypt', 'Politics': 'Politics',
+                          'Sports': 'sports', 'Art': 'art', 'Money': 'Economy',
+                          'Accidents': 'accidents', 'TV': 'tv', 'Woman': 'ladies',
+                          'Technology': 'variety/Internet-Comm', 'Science': 'variety/sciences',
+                          'Health': 'variety/health', 'Cars': 'auto', 'Culture': 'Culture'},
+                         list_container_tag_name='ul', list_container_attr_name='class',
+                         list_container_attr_value='listing', container_tag_name='li',
+                         title_tag_name='div', title_attr_name='class', title_attr_value='text',
+                         timestamp_tag_name='span', body_tag_name='div', body_attr_name='class',
+                         body_attr_value='eventContent eventContentNone', tags_tag_name='div',
+                         tags_attr_name='class', tags_attr_value='relatedWords')
+        self.__VIEWSTATE = ''
+        self.__VIEWSTATEGENERATOR = ''
+        self.__EVENTVALIDATION = ''
+
+    def get_page_at_index(self, url, index):
+        if index == 1:
+            response = self.session.get(self.get_page_url_at_index(url, index))
+        else:
+            response = self.session.post(self.get_page_url_at_index(url, index), data={
+                '__VIEWSTATE': self.__VIEWSTATE,
+                '__VIEWSTATEGENERATOR': self.__VIEWSTATEGENERATOR,
+                '__EVENTTARGET': 'ctl00$ctl00$Body$Body$AspNetPager',
+                '__EVENTARGUMENT': index,
+                '__EVENTVALIDATION': self.__EVENTVALIDATION,
+            })
+
+        assert response.status_code == 200
+
+        page = BeautifulSoup(response.content, self.format)
+
+        # hidden fields to send in next request
+        self.__VIEWSTATE = str(page.find('input', type='hidden', id='__VIEWSTATE')['value'])
+        self.__VIEWSTATEGENERATOR = str(page.find('input', type='hidden', id='__VIEWSTATEGENERATOR')['value'])
+        self.__EVENTVALIDATION = str(page.find('input', type='hidden', id='__EVENTVALIDATION')['value'])
+
+        return page
+
+    def get_page_url_at_index(self, url, index):
+        return url
+
+    def get_post_title(self, post_container):
+        title_container = post_container.find(self.title_tag_name,
+                                              {self.title_attr_name: self.title_attr_value})
+        title = title_container.find('a') if title_container else None
+        return title.text.strip() if title else ''
+
+
+shorouk_news_scraper = ShoroukNewsScraper()
