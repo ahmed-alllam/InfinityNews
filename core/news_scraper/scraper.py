@@ -72,7 +72,7 @@ class BaseNewsScraper:
         self.session = requests.session()
 
     def scrape(self):
-        source = Source.objects.get_or_create(title=self.title)[0]
+        source = Source.objects.get_or_create(title=self.title, website=self.base_url)[0]
         posts = []
         for category, url in self.categories.items():
             url = self.get_category_url(category, url)
@@ -110,7 +110,7 @@ class BaseNewsScraper:
                     continue
 
                 if Post.objects.filter(source=source, category=category, title=post.title,
-                                       detail_url=post.detail_url).exists():
+                                       detail_url=post.detail_url):
                     return posts, False
                 posts.append(post)
                 post.save()
