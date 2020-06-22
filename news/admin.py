@@ -1,6 +1,5 @@
 from django.contrib import admin
 
-# Register your models here.
 from news.models import Source, Category, PostTag, Post, Comment
 
 admin.site.register(Source)
