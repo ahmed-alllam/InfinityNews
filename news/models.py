@@ -49,6 +49,11 @@ class Source(models.Model):
     description = models.TextField()
     website = models.URLField()
 
+    @property
+    def categories(self):
+        return Category.objects.filter(pk__in=self.posts.values_list('category', flat=True)
+                                       .distinct())
+
     def __str__(self):
         return self.title
 
