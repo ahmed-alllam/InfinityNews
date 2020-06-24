@@ -44,6 +44,7 @@ def unique_slugify(instance, value):
 
 
 class Source(models.Model):
+    slug = models.SlugField(max_length=255)
     title = models.CharField(max_length=100)
     image = models.ImageField(null=True)
     description = models.TextField()
@@ -53,6 +54,11 @@ class Source(models.Model):
     def categories(self):
         return Category.objects.filter(pk__in=self.posts.values_list('category', flat=True)
                                        .distinct())
+
+    def save(self, **kwargs):
+        self.slug = unique_slugify(self, self.title)
+
+        return super().save(**kwargs)
 
     def __str__(self):
         return self.title
