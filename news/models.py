@@ -11,16 +11,15 @@ def rand_slug():
     return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(6))
 
 
-def _slug_strip(value):
-    """removes the '-' separator from the end or start of the string"""
-    return re.sub(r'^%s+|%s+$' % ('-', '-'), '', value)
-
-
-def unique_slugify(instance, queryset=None, value=rand_slug()):
+def unique_slugify(instance, queryset=None, value=rand_slug(), max_length=255):
     """function used to give a unique slug to an instance"""
 
     slug = slugify(value, allow_unicode=True)
-    slug = slug[:255]  # limit its len to max_length of slug field
+    slug = slug[:max_length]  # limit its len to max_length of slug field
+
+    def _slug_strip(_value):
+        """removes the '-' separator from the end or start of the string"""
+        return re.sub(r'^%s+|%s+$' % ('-', '-'), '', _value)
 
     slug = _slug_strip(slug)
     original_slug = slug
@@ -35,8 +34,8 @@ def unique_slugify(instance, queryset=None, value=rand_slug()):
     while not slug or queryset.filter(slug=slug):
         slug = original_slug
         end = '-%s' % _next
-        if len(slug) + len(end) > 255:
-            slug = slug[:255 - len(end)]
+        if len(slug) + len(end) > max_length:
+            slug = slug[:max_length - len(end)]
             slug = _slug_strip(slug)
         slug = '%s%s' % (slug, end)
         _next += 1
@@ -104,14 +103,14 @@ class Post(models.Model):
 
 
 class Comment(models.Model):
-    slug = models.SlugField(allow_unicode=True, db_index=True, unique=True, max_length=6)
+    slug = models.SlugField(allow_unicode=True, db_index=True, unique=True, max_length=15)
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='comments')
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
     text = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def save(self, **kwargs):
-        self.slug = unique_slugify(self, self.post.comments.all())
+        self.slug = unique_slugify(self, self.post.comments.all(), max_length=15)
 
         return super().save(**kwargs)
 
