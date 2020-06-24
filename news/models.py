@@ -16,7 +16,7 @@ def _slug_strip(value):
     return re.sub(r'^%s+|%s+$' % ('-', '-'), '', value)
 
 
-def unique_slugify(instance, value):
+def unique_slugify(instance, queryset=None, value=rand_slug()):
     """function used to give a unique slug to an instance"""
 
     slug = slugify(value, allow_unicode=True)
@@ -25,7 +25,8 @@ def unique_slugify(instance, value):
     slug = _slug_strip(slug)
     original_slug = slug
 
-    queryset = instance.__class__.objects.all()
+    if not queryset:
+        queryset = instance.__class__.objects.all()
 
     if instance.pk:
         queryset = queryset.exclude(pk=instance.pk)
@@ -94,7 +95,7 @@ class Post(models.Model):
     timestamp = models.DateTimeField(null=True)
 
     def save(self, **kwargs):
-        self.slug = unique_slugify(self, self.title)
+        self.slug = unique_slugify(self, value=self.title)
 
         return super().save(**kwargs)
 
@@ -110,8 +111,7 @@ class Comment(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def save(self, **kwargs):
-        while self.post.comments.filter(slug=self.slug) or self.slug == '':
-            self.slug = rand_slug()
+        self.slug = unique_slugify(self, self.post.comments.all())
 
         return super().save(**kwargs)
 
