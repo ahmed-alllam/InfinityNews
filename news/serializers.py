@@ -1,6 +1,11 @@
 from rest_framework import serializers
 
-from news.models import Post, Source
+from news.models import Post, Source, Comment
+
+
+class CategorySerializer(serializers.Serializer):
+    def to_representation(self, obj):
+        return obj.title
 
 
 class SourceSerializer(serializers.ModelSerializer):
@@ -10,7 +15,7 @@ class SourceSerializer(serializers.ModelSerializer):
 
 
 class SourceDetailSerializer(serializers.ModelSerializer):
-    categories = serializers.StringRelatedField(many=True)
+    categories = CategorySerializer(many=True)
 
     class Meta:
         fields = ('title', 'image', 'description', 'website', 'categories')
@@ -19,7 +24,7 @@ class SourceDetailSerializer(serializers.ModelSerializer):
 
 class PostSerializer(serializers.ModelSerializer):
     source = SourceSerializer()
-    category = serializers.StringRelatedField()
+    category = CategorySerializer()
 
     class Meta:
         fields = ('slug', 'source', 'category', 'title',
@@ -29,9 +34,16 @@ class PostSerializer(serializers.ModelSerializer):
 
 class PostDetailSerializer(serializers.ModelSerializer):
     source = SourceSerializer()
-    category = serializers.StringRelatedField()
+    category = CategorySerializer()
     tags = serializers.StringRelatedField(many=True)
 
     class Meta:
         exclude = ('id',)
         model = Post
+
+
+class CommentSerializer(serializers.ModelField):
+    # user = UserProfileSerializer()
+    class Meta:
+        fields = ('slug', 'user', 'text', 'timestamp')
+        model = Comment

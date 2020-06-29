@@ -26,10 +26,16 @@ class Source(models.Model):
 
 
 class Category(models.Model):
+    slug = models.SlugField(max_length=100)
     title = models.CharField(max_length=100)
 
     class Meta:
         verbose_name_plural = 'Categories'
+
+    def save(self, **kwargs):
+        self.slug = unique_slugify(self, value=self.title, max_length=100)
+
+        return super().save(**kwargs)
 
     def __str__(self):
         return self.title

@@ -1,12 +1,19 @@
 from django.urls import path
 
+from news import views
+
 urlpatterns = [
-    path('news-feed/', view=None, name='feed'),
-    path('posts/<slug:post>/', view=None, name='post-detail'),
-    path('posts/<slug:post>/comments/', view=None, name='comments-list'),
-    path('posts/<slug:post>/comments/<slug:comment>', view=None, name='comment-detail'),
-    path('catergories/', view=None, name='categories'),
-    path('sources/', view=None, name='sources'),
-    path('sources/<slug:source>/', view=None, name='source-detail'),
-    path('sources/<slug:source>/categories/posts', view=None, name='source-posts')
+    path('news-feed/', view=views.NewsFeedView.as_view(), name='feed'),
+    path('posts/<slug:post>/', view=views.PostDetailView.as_view(), name='post-detail'),
+    path('posts/<slug:post>/comments/', view=views.CommentsView.as_view(
+        {'get': 'list', 'post': 'create'}), name='comments-list'
+         ),
+    path('posts/<slug:post>/comments/<slug:comment>', view=views.CommentsView.as_view(
+        {'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}), name='comment-detail'
+         ),
+    path('catergories/', view=views.CategoriesListView.as_view(), name='categories'),
+    path('sources/', view=views.SourcesListView.as_view(), name='sources'),
+    path('sources/<slug:source>/', view=views.SourceDetailView.as_view(), name='source-detail'),
+    path('sources/<slug:source>/categories/<slug:category>/posts',
+         view=views.SourcePostsView.as_view(), name='source-posts')
 ]
