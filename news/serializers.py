@@ -1,11 +1,12 @@
 from rest_framework import serializers
 
-from news.models import Post, Source, Comment
+from news.models import Post, Source, Comment, Category
 
 
-class CategorySerializer(serializers.Serializer):
-    def to_representation(self, obj):
-        return obj.title
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        exclude = ('id',)
+        models = Category
 
 
 class SourceSerializer(serializers.ModelSerializer):

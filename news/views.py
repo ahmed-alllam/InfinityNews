@@ -1,7 +1,7 @@
 from rest_framework import generics, mixins
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
 
 from news.models import Post, Category, Source, Comment
@@ -67,3 +67,18 @@ class SourcePostsView(generics.ListAPIView):
         source_slug = self.kwargs.get('source', '')
         category_slug = self.kwargs.get('category', '')
         return self.queryset.filter(source__slug=source_slug, category__slug=category_slug)
+
+
+class CategoryFavouriteView(generics.CreateAPIView,
+                            generics.DestroyAPIView):
+    lookup_field = 'category'
+    lookup_url_kwarg = 'category'
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    queryset = Category.objects.all()
+
+    def perform_create(self, instance):
+        self.request.user.favourite_categories.add(instance)
+
+    def perform_destroy(self, instance):
+        self.request.user.favourite_categories.remove(instance)

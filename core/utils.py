@@ -2,14 +2,23 @@ import random
 import re
 import string
 
+from django.contrib.auth import get_user_model
 from django.utils.text import slugify
 
 
-def rand_slug():
+def generate_random_string():
     return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(6))
 
 
-def unique_slugify(instance, queryset=None, value=rand_slug(), max_length=255):
+def generate_random_username():
+    username = generate_random_string()
+    while get_user_model().objects.filter(username=username):
+        username = generate_random_string()
+
+    return username
+
+
+def unique_slugify(instance, queryset=None, value=generate_random_string(), max_length=255):
     """function used to give a unique slug to an instance"""
 
     slug = slugify(value, allow_unicode=True)

@@ -11,7 +11,9 @@ urlpatterns = [
     path('posts/<slug:post>/comments/<slug:comment>', view=views.CommentsView.as_view(
         {'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}), name='comment-detail'
          ),
-    path('catergories/', view=views.CategoriesListView.as_view(), name='categories'),
+    path('categories/', view=views.CategoriesListView.as_view(), name='categories'),
+    path('categories/<slug:category>', view=views.CategoryFavouriteView.as_view(),
+         name='category-favourite'),
     path('sources/', view=views.SourcesListView.as_view(), name='sources'),
     path('sources/<slug:source>/', view=views.SourceDetailView.as_view(), name='source-detail'),
     path('sources/<slug:source>/categories/<slug:category>/posts',
