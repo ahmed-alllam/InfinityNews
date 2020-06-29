@@ -1,3 +1,4 @@
+from django.db.models import Count
 from rest_framework import generics, mixins
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.pagination import LimitOffsetPagination
@@ -14,9 +15,14 @@ class NewsFeedView(generics.ListAPIView):
     serializer_class = PostSerializer
     pagination_class = LimitOffsetPagination  # todo: change it to Cursor-based Pagignation
     authentication_classes = (TokenAuthentication,)
+    queryset = Post.objects.all()
 
-    def get_queryset(self):
-        pass
+    def filter_queryset(self, queryset):
+        user = self.request.user
+        if user.is_authenticated:
+            queryset.filter(category__in=user.favourite_categories)
+
+        return queryset
 
 
 class PostDetailView(generics.RetrieveAPIView):
@@ -30,6 +36,9 @@ class CategoriesListView(generics.ListAPIView):
     serializer_class = CategorySerializer
     pagination_class = LimitOffsetPagination  # todo: change it to Cursor-based Pagignation
     queryset = Category.objects.all()
+
+    def filter_queryset(self, queryset):
+        queryset.annotate(count=Count('posts')).order_by('-count')
 
 
 class SourcesListView(generics.ListAPIView):
@@ -63,10 +72,10 @@ class SourcePostsView(generics.ListAPIView):
     pagination_class = LimitOffsetPagination  # todo: change it to Cursor-based Pagignation
     queryset = Post.objects.all()
 
-    def get_queryset(self):
+    def filter_queryset(self, queryset):
         source_slug = self.kwargs.get('source', '')
         category_slug = self.kwargs.get('category', '')
-        return self.queryset.filter(source__slug=source_slug, category__slug=category_slug)
+        return queryset.filter(source__slug=source_slug, category__slug=category_slug)
 
 
 class CategoryFavouriteView(generics.CreateAPIView,

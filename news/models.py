@@ -60,6 +60,9 @@ class Post(models.Model):
     body = models.TextField()
     timestamp = models.DateTimeField(null=True)
 
+    class Meta:
+        ordering = ('-timestamp',)
+
     def save(self, **kwargs):
         self.slug = unique_slugify(self, value=self.title)
 
@@ -75,6 +78,9 @@ class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
     text = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-timestamp',)
 
     def save(self, **kwargs):
         self.slug = unique_slugify(self, self.post.comments.all(), max_length=15)
