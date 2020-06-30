@@ -1,19 +1,17 @@
-from django.db.models import Count
 from rest_framework import generics, mixins
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
 
+from news import serializers
 from news.models import Post, Category, Source, Comment
+from news.pagination import TimeStampCursorPagination, PriorityCursorPagination
 from news.permissions import IsOwner
-from news.serializers import PostSerializer, PostDetailSerializer, CategorySerializer, SourceSerializer, \
-    CommentSerializer, SourceDetailSerializer
 
 
 class NewsFeedView(generics.ListAPIView):
-    serializer_class = PostSerializer
-    pagination_class = LimitOffsetPagination  # todo: change it to Cursor-based Pagignation
+    serializer_class = serializers.PostSerializer
+    pagination_class = TimeStampCursorPagination
     authentication_classes = (TokenAuthentication,)
     queryset = Post.objects.all()
 
@@ -28,22 +26,19 @@ class NewsFeedView(generics.ListAPIView):
 class PostDetailView(generics.RetrieveAPIView):
     lookup_field = 'slug'
     lookup_url_kwarg = 'post'
-    serializer_class = PostDetailSerializer
+    serializer_class = serializers.PostDetailSerializer
     queryset = Post.objects.all()
 
 
 class CategoriesListView(generics.ListAPIView):
-    serializer_class = CategorySerializer
-    pagination_class = LimitOffsetPagination  # todo: change it to Cursor-based Pagignation
+    serializer_class = serializers.CategorySerializer
+    pagination_class = PriorityCursorPagination
     queryset = Category.objects.all()
-
-    def filter_queryset(self, queryset):
-        queryset.annotate(count=Count('posts')).order_by('-count')
 
 
 class SourcesListView(generics.ListAPIView):
-    serializer_class = SourceSerializer
-    pagination_class = LimitOffsetPagination  # todo: change it to Cursor-based Pagignation
+    serializer_class = serializers.SourceSerializer
+    pagination_class = PriorityCursorPagination
     queryset = Source.objects.all()
 
 
@@ -54,7 +49,8 @@ class CommentsView(mixins.CreateModelMixin,
                    GenericViewSet):
     lookup_field = 'slug'
     lookup_url_kwarg = 'comment'
-    serializer_class = CommentSerializer
+    serializer_class = serializers.CommentSerializer
+    pagination_class = TimeStampCursorPagination
     queryset = Comment.objects.all()
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticatedOrReadOnly, IsOwner)
@@ -63,13 +59,13 @@ class CommentsView(mixins.CreateModelMixin,
 class SourceDetailView(generics.RetrieveAPIView):
     lookup_field = 'slug'
     lookup_url_kwarg = 'source'
-    serializer_class = SourceDetailSerializer
+    serializer_class = serializers.SourceDetailSerializer
     queryset = Source.objects.all()
 
 
 class SourcePostsView(generics.ListAPIView):
-    serializer_class = PostSerializer
-    pagination_class = LimitOffsetPagination  # todo: change it to Cursor-based Pagignation
+    serializer_class = serializers.PostSerializer
+    pagination_class = TimeStampCursorPagination
     queryset = Post.objects.all()
 
     def filter_queryset(self, queryset):
