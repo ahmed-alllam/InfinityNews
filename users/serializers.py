@@ -6,20 +6,34 @@ from core.utils import generate_random_username
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
+    guest = serializers.BooleanField(write_only=True)
+
     class Meta:
-        fields = ('username', 'first_name', 'last_name', 'password')
+        fields = ('username', 'first_name', 'last_name', 'password', 'guest')
         model = get_user_model()
         extra_kwargs = {
+            'username': {'required': False},
+            'first_name': {'required': False},
+            'last_name': {'required': False},
             'password': {
-                'write_only': True, 'min_length': 8
-            }
+                'write_only': True, 'min_length': 8, 'required': False
+            },
         }
+
+    def validate(self, attrs):
+        if not attrs.get("guest", False):
+            if not attrs.get("username", "") or not attrs.get("password", "") \
+                or not attrs.get("first_name", "") or not attrs.get("last_name", ""):
+                raise serializers.ValidationError()
+
+        return attrs
 
     def create(self, validated_data):
         if validated_data.pop('guest', False):
             validated_data['username'] = generate_random_username()
-
-        return get_user_model().objects.create_user(**validated_data)
+        user = get_user_model().objects.create_user(**validated_data)
+        print(user)
+        return user
 
 
 class AuthTokenSerializer(serializers.Serializer):
@@ -43,6 +57,7 @@ class AuthTokenSerializer(serializers.Serializer):
         )
         if not user:
             msg = _('Unable to authenticate with provided credentials')
+            print(username)
             raise serializers.ValidationError(msg, code='authorization')
 
         attrs['user'] = user
