@@ -6,7 +6,7 @@ from news.models import Post, Source, Comment, Category
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         exclude = ('id',)
-        models = Category
+        model = Category
 
 
 class SourceSerializer(serializers.ModelSerializer):

@@ -3,7 +3,7 @@ from django.urls import path
 from news import views
 
 urlpatterns = [
-    path('news-feed/', view=views.NewsFeedView.as_view(), name='feed'),
+    path('feed/', view=views.NewsFeedView.as_view(), name='feed'),
     path('posts/<slug:post>/', view=views.PostDetailView.as_view(), name='post-detail'),
     path('posts/<slug:post>/comments/', view=views.CommentsView.as_view(
         {'get': 'list', 'post': 'create'}), name='comments-list'
