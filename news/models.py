@@ -31,6 +31,7 @@ class Source(models.Model):
 
 class Category(models.Model):
     priority = models.SmallIntegerField()
+    image = models.ImageField()
     slug = models.SlugField(max_length=100)
     title = models.CharField(max_length=100)
 
