@@ -12,7 +12,7 @@ urlpatterns = [
         {'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}), name='comment-detail'
          ),
     path('categories/', view=views.CategoriesListView.as_view(), name='categories'),
-    path('categories/<slug:category>', view=views.CategoryFavouriteView.as_view(),
+    path('categories/<slug:category>/favourite', view=views.CategoryFavouriteView.as_view(),
          name='category-favourite'),
     path('sources/', view=views.SourcesListView.as_view(), name='sources'),
     path('sources/<slug:source>/', view=views.SourceDetailView.as_view(), name='source-detail'),

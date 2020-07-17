@@ -4,9 +4,17 @@ from news.models import Post, Source, Comment, Category
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    is_favourited_by_user = serializers.SerializerMethodField()
+
     class Meta:
-        exclude = ('id',)
+        fields = ('slug', 'title', 'image', 'is_favourited_by_user')
         model = Category
+
+    def get_is_favourited_by_user(self, category):
+        user = self.context.get('request')['user']
+        if user.is_authenticated:
+            return category.is_favourited_by_user(user)
+        return False
 
 
 class SourceSerializer(serializers.ModelSerializer):

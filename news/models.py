@@ -44,6 +44,9 @@ class Category(models.Model):
 
         return super().save(**kwargs)
 
+    def is_favourited_by_user(self, user):
+        return user.favourite_categories.filter(slug=self.slug).exists()
+
     def __str__(self):
         return self.title
 
