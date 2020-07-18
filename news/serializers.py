@@ -11,7 +11,7 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
 
     def get_is_favourited_by_user(self, category):
-        user = self.context.get('request')['user']
+        user = self.context.get('request').user
         if user.is_authenticated:
             return category.is_favourited_by_user(user)
         return False
