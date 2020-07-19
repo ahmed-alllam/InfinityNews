@@ -6,6 +6,6 @@ class TimeStampCursorPagination(CursorPaginationWithCount):
     page_size = 25
 
 
-class PriorityCursorPagination(CursorPaginationWithCount):
-    ordering = 'priority'
+class SortCursorPagination(CursorPaginationWithCount):
+    ordering = 'sort'
     page_size = 30

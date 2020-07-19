@@ -1,13 +1,14 @@
 from rest_framework import serializers
 
 from news.models import Post, Source, Comment, Category
+from users.serializers import UserProfileSerializer
 
 
 class CategorySerializer(serializers.ModelSerializer):
     is_favourited_by_user = serializers.SerializerMethodField()
 
     class Meta:
-        fields = ('slug', 'title', 'image', 'is_favourited_by_user')
+        fields = ('slug', 'title', 'sort', 'image', 'is_favourited_by_user')
         model = Category
 
     def get_is_favourited_by_user(self, category):
@@ -52,7 +53,8 @@ class PostDetailSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelField):
-    # user = UserProfileSerializer()
+    user = UserProfileSerializer()
+
     class Meta:
         fields = ('slug', 'user', 'text', 'timestamp')
         model = Comment

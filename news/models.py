@@ -5,7 +5,7 @@ from core.utils import unique_slugify
 
 
 class Source(models.Model):
-    priority = models.SmallIntegerField()
+    sort = models.SmallIntegerField()
     slug = models.SlugField(max_length=255)
     title = models.CharField(max_length=100)
     image = models.ImageField(null=True)
@@ -13,7 +13,7 @@ class Source(models.Model):
     website = models.URLField()
 
     class Meta:
-        ordering = ('-priority',)
+        ordering = ('sort',)
 
     @property
     def categories(self):
@@ -30,14 +30,14 @@ class Source(models.Model):
 
 
 class Category(models.Model):
-    priority = models.SmallIntegerField()
+    sort = models.SmallIntegerField()
     image = models.ImageField()
     slug = models.SlugField(max_length=100)
     title = models.CharField(max_length=100)
 
     class Meta:
         verbose_name_plural = 'Categories'
-        ordering = ('-priority',)
+        ordering = ('sort',)
 
     def save(self, **kwargs):
         self.slug = unique_slugify(self, value=self.title, max_length=100)
