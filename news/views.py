@@ -5,7 +5,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from news import serializers
 from news.models import Post, Category, Source, Comment
-from news.pagination import TimeStampCursorPagination, PriorityCursorPagination
+from news.pagination import TimeStampCursorPagination, SortCursorPagination
 from news.permissions import IsOwner
 
 
@@ -32,13 +32,14 @@ class PostDetailView(generics.RetrieveAPIView):
 
 class CategoriesListView(generics.ListAPIView):
     serializer_class = serializers.CategorySerializer
-    pagination_class = PriorityCursorPagination
+    authentication_classes = (TokenAuthentication,)
+    pagination_class = SortCursorPagination
     queryset = Category.objects.all()
 
 
 class SourcesListView(generics.ListAPIView):
     serializer_class = serializers.SourceSerializer
-    pagination_class = PriorityCursorPagination
+    pagination_class = SortCursorPagination
     queryset = Source.objects.all()
 
 
