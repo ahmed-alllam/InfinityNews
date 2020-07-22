@@ -4,9 +4,10 @@ from rest_framework import generics, permissions, authentication
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
-from rest_framework.views import APIView
 
 from news.models import Category
+from news.pagination import SortCursorPagination
+from news.serializers import CategorySerializer
 from users.serializers import UserProfileSerializer, AuthTokenSerializer
 
 
@@ -34,11 +35,13 @@ class ReadOnlyUserView(generics.RetrieveAPIView):
     serializer_class = UserProfileSerializer
 
 
-class FavouriteCategoriesView(APIView):
+class FavouriteCategoriesView(generics.ListAPIView, generics.UpdateAPIView):
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
+    pagination_class = SortCursorPagination
+    serializer_class = CategorySerializer
 
-    def put(self, request):
+    def update(self, request, *args, **kwargs):
         user = request.user
         categories_slugs = request.data.get('categories', [])
         if categories_slugs:
@@ -54,3 +57,6 @@ class FavouriteCategoriesView(APIView):
             return Response(status=204)
         else:
             return Response(_("Invalid Data"), status=400)
+
+    def get_queryset(self):
+        return self.request.user.favourite_categories.all()
