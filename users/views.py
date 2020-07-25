@@ -6,7 +6,6 @@ from rest_framework.response import Response
 from rest_framework.settings import api_settings
 
 from news.models import Category
-from news.pagination import SortCursorPagination
 from news.serializers import CategorySerializer
 from users.serializers import UserProfileSerializer, AuthTokenSerializer
 
@@ -38,7 +37,6 @@ class ReadOnlyUserView(generics.RetrieveAPIView):
 class FavouriteCategoriesView(generics.ListAPIView, generics.UpdateAPIView):
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
-    pagination_class = SortCursorPagination
     serializer_class = CategorySerializer
 
     def update(self, request, *args, **kwargs):

@@ -9,18 +9,13 @@ from news.pagination import TimeStampCursorPagination, SortCursorPagination
 from news.permissions import IsOwner
 
 
-class NewsFeedView(generics.ListAPIView):
+class CategoryPostsView(generics.ListAPIView):
     serializer_class = serializers.PostSerializer
     pagination_class = TimeStampCursorPagination
     authentication_classes = (TokenAuthentication,)
+    lookup_field = 'slug'
+    lookup_url_kwarg = 'category'
     queryset = Post.objects.all()
-
-    def filter_queryset(self, queryset):
-        user = self.request.user
-        if user.is_authenticated:
-            queryset.filter(category__in=user.favourite_categories)
-
-        return queryset
 
 
 class PostDetailView(generics.RetrieveAPIView):
