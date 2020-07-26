@@ -13,9 +13,11 @@ class CategoryPostsView(generics.ListAPIView):
     serializer_class = serializers.PostSerializer
     pagination_class = TimeStampCursorPagination
     authentication_classes = (TokenAuthentication,)
-    lookup_field = 'slug'
     lookup_url_kwarg = 'category'
     queryset = Post.objects.all()
+
+    def filter_queryset(self, queryset):
+        return queryset.filter(category__slug=self.kwargs[self.lookup_url_kwarg])
 
 
 class PostDetailView(generics.RetrieveAPIView):
