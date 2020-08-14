@@ -21,7 +21,7 @@ class Source(models.Model):
                                        .distinct())
 
     def save(self, **kwargs):
-        self.slug = unique_slugify(self, self.title)
+        self.slug = unique_slugify(self, value=self.title)
 
         return super().save(**kwargs)
 
@@ -65,7 +65,7 @@ class Post(models.Model):
     tags = models.ManyToManyField(PostTag, related_name='posts')
     title = models.CharField(max_length=1024)
     description = models.TextField()
-    image = models.ImageField(null=True)
+    image = models.URLField(null=True)
     detail_url = models.URLField()
     body = models.TextField()
     timestamp = models.DateTimeField(null=True)
@@ -80,6 +80,10 @@ class Post(models.Model):
 
     def __str__(self):
         return self.title
+
+    @property
+    def comments_count(self):
+        return self.comments.count()
 
 
 class Comment(models.Model):

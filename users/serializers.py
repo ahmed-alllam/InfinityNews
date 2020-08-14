@@ -6,10 +6,10 @@ from core.utils import generate_random_username
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    guest = serializers.BooleanField(write_only=True)
+    is_guest = serializers.BooleanField()
 
     class Meta:
-        fields = ('username', 'first_name', 'last_name', 'password', 'guest')
+        fields = ('username', 'first_name', 'last_name', 'password', 'profile_photo', 'is_guest')
         model = get_user_model()
         extra_kwargs = {
             'username': {'required': False},
@@ -21,7 +21,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         }
 
     def validate(self, attrs):
-        if not attrs.get("guest", False):
+        if not attrs.get("is_guest", False):
             if not attrs.get("username", "") or not attrs.get("password", "") \
                 or not attrs.get("first_name", "") or not attrs.get("last_name", ""):
                 raise serializers.ValidationError()
@@ -29,10 +29,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        if validated_data.pop('guest', False):
+        if validated_data.pop('is_guest', False):
             validated_data['username'] = generate_random_username()
         user = get_user_model().objects.create_user(**validated_data)
-        print(user)
         return user
 
 

@@ -46,15 +46,28 @@ class PostDetailSerializer(serializers.ModelSerializer):
     source = SourceSerializer()
     category = CategorySerializer()
     tags = serializers.StringRelatedField(many=True)
+    comments_count = serializers.IntegerField(read_only=True)
 
     class Meta:
-        exclude = ('id',)
+        fields = ('source', 'category', 'title', 'detail_url', 'body', 'description',
+                  'image', 'timestamp', 'comments_count', 'tags')
         model = Post
 
 
-class CommentSerializer(serializers.ModelField):
-    user = UserProfileSerializer()
+class CommentSerializer(serializers.ModelSerializer):
+    user = UserProfileSerializer(read_only=True)
 
     class Meta:
         fields = ('slug', 'user', 'text', 'timestamp')
         model = Comment
+        extra_kwargs = {
+            'slug': {
+                'read_only': True
+            }
+        }
+
+    def create(self, validated_data):
+        post = Post.objects.get(slug=self.context['view'].kwargs.get('post'))
+        user = self.context['request'].user
+
+        return Comment.objects.create(post=post, user=user, **validated_data)

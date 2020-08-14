@@ -1,3 +1,5 @@
+import time
+
 from rest_framework import generics, mixins
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -17,6 +19,7 @@ class CategoryPostsView(generics.ListAPIView):
     queryset = Post.objects.all()
 
     def filter_queryset(self, queryset):
+        time.sleep(3)
         return queryset.filter(category__slug=self.kwargs[self.lookup_url_kwarg])
 
 
@@ -25,6 +28,10 @@ class PostDetailView(generics.RetrieveAPIView):
     lookup_url_kwarg = 'post'
     serializer_class = serializers.PostDetailSerializer
     queryset = Post.objects.all()
+
+    def filter_queryset(self, queryset):
+        time.sleep(3)
+        return super().filter_queryset(queryset)
 
 
 class CategoriesListView(generics.ListAPIView):
@@ -52,6 +59,9 @@ class CommentsView(mixins.CreateModelMixin,
     queryset = Comment.objects.all()
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticatedOrReadOnly, IsOwner)
+
+    def filter_queryset(self, queryset):
+        return super().filter_queryset(queryset.filter(post__slug=self.kwargs.get('post', '')))
 
 
 class SourceDetailView(generics.RetrieveAPIView):
