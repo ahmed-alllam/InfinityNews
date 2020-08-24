@@ -37,8 +37,8 @@ class PostSerializer(serializers.ModelSerializer):
     category = CategorySerializer()
 
     class Meta:
-        fields = ('slug', 'source', 'category', 'title',
-                  'description', 'image', 'timestamp')
+        fields = ('slug', 'source', 'category', 'title', 'description',
+                  'thumbnail', 'full_image', 'timestamp')
         model = Post
 
 
@@ -49,8 +49,8 @@ class PostDetailSerializer(serializers.ModelSerializer):
     comments_count = serializers.IntegerField(read_only=True)
 
     class Meta:
-        fields = ('source', 'category', 'title', 'detail_url', 'body', 'description',
-                  'image', 'timestamp', 'comments_count', 'tags')
+        fields = ('slug', 'source', 'category', 'title', 'detail_url', 'body', 'description',
+                  'thumbnail', 'full_image', 'timestamp', 'comments_count', 'tags')
         model = Post
 
 

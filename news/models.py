@@ -5,12 +5,12 @@ from core.utils import unique_slugify
 
 
 class Source(models.Model):
-    sort = models.SmallIntegerField()
+    sort = models.SmallAutoField(primary_key=True)
     slug = models.SlugField(max_length=255)
     title = models.CharField(max_length=100)
     image = models.ImageField(null=True)
     description = models.TextField()
-    website = models.URLField()
+    website = models.URLField(blank=True)
 
     class Meta:
         ordering = ('sort',)
@@ -30,7 +30,7 @@ class Source(models.Model):
 
 
 class Category(models.Model):
-    sort = models.SmallIntegerField()
+    sort = models.SmallAutoField(primary_key=True)
     image = models.ImageField()
     slug = models.SlugField(max_length=100)
     title = models.CharField(max_length=100)
@@ -65,13 +65,14 @@ class Post(models.Model):
     tags = models.ManyToManyField(PostTag, related_name='posts')
     title = models.CharField(max_length=1024)
     description = models.TextField()
-    image = models.URLField(null=True)
+    thumbnail = models.URLField(null=True)
+    full_image = models.URLField(null=True)
     detail_url = models.URLField()
     body = models.TextField()
     timestamp = models.DateTimeField(null=True)
 
     class Meta:
-        ordering = ('-timestamp',)
+        ordering = ('category', '-timestamp',)
 
     def save(self, **kwargs):
         self.slug = unique_slugify(self, value=self.title)
@@ -87,7 +88,7 @@ class Post(models.Model):
 
 
 class Comment(models.Model):
-    slug = models.SlugField(allow_unicode=True, db_index=True, unique=True, max_length=15)
+    slug = models.SlugField(allow_unicode=True, db_index=True, max_length=15)
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='comments')
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
     text = models.TextField()
@@ -95,6 +96,7 @@ class Comment(models.Model):
 
     class Meta:
         ordering = ('-timestamp',)
+        unique_together = ('slug', 'post',)
 
     def save(self, **kwargs):
         self.slug = unique_slugify(self, self.post.comments.all(), max_length=15)

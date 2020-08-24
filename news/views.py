@@ -1,5 +1,3 @@
-import time
-
 from rest_framework import generics, mixins
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -19,7 +17,6 @@ class CategoryPostsView(generics.ListAPIView):
     queryset = Post.objects.all()
 
     def filter_queryset(self, queryset):
-        time.sleep(3)
         return queryset.filter(category__slug=self.kwargs[self.lookup_url_kwarg])
 
 
@@ -28,10 +25,6 @@ class PostDetailView(generics.RetrieveAPIView):
     lookup_url_kwarg = 'post'
     serializer_class = serializers.PostDetailSerializer
     queryset = Post.objects.all()
-
-    def filter_queryset(self, queryset):
-        time.sleep(3)
-        return super().filter_queryset(queryset)
 
 
 class CategoriesListView(generics.ListAPIView):

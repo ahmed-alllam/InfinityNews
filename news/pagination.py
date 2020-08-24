@@ -3,7 +3,7 @@ from core.pagination import CursorPaginationWithCount
 
 class TimeStampCursorPagination(CursorPaginationWithCount):
     ordering = '-timestamp'
-    page_size = 25
+    page_size = 20
 
 
 class SortCursorPagination(CursorPaginationWithCount):

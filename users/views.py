@@ -7,7 +7,7 @@ from rest_framework.settings import api_settings
 
 from news.models import Category
 from news.serializers import CategorySerializer
-from users.serializers import UserProfileSerializer, AuthTokenSerializer
+from users.serializers import UserProfileSerializer
 
 
 class CreateUserView(generics.CreateAPIView):
@@ -15,7 +15,6 @@ class CreateUserView(generics.CreateAPIView):
 
 
 class CreateTokenView(ObtainAuthToken):
-    serializer_class = AuthTokenSerializer
     renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
 
 
@@ -43,13 +42,10 @@ class FavouriteCategoriesView(generics.ListAPIView, generics.UpdateAPIView):
         user = request.user
         categories_slugs = request.data.get('categories', [])
         if categories_slugs:
-            categories = []
-            for category in categories_slugs:
-                try:
-                    category = Category.objects.get(slug=category)
-                    categories.append(category)
-                except Category.DoesNotExist:
-                    return Response(_("Invalid category slug"), status=404)
+            categories = Category.objects.filter(slug__in=categories_slugs)
+
+            if len(categories) < len(categories_slugs):
+                return Response(_("Invalid category slug"), status=404)
 
             user.favourite_categories.set(categories)
             return Response(status=204)
