@@ -1,1 +1,1 @@
-web: gunicorn infinitynews.wsgi
+web: gunicorn InfinityNews.wsgi
