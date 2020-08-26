@@ -6,13 +6,13 @@ services:
     build:
       context: .
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5000:5000"
     volumes:
       - .:/InfinityNews
     command: >
       sh -c "python3 manage.py makemigrations &&
       python3 manage.py migrate &&
-      gunicorn --bind 0.0.0.0:5000 manage:app"
+      gunicorn --bind 0.0.0.0:5000 InfinityNews.wsgi --reload"
     environment:
       - DB_HOST=postgresdb
       - DB_NAME=infinitynewsdb
