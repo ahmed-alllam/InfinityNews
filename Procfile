@@ -1,2 +1,2 @@
 web: gunicorn InfinityNews.wsgi
-clock: python cronjob.py
+clock: python manage.py scrape

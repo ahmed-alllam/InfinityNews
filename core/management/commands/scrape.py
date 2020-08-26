@@ -5,7 +5,9 @@ from core.news_scraper.scraper import scrapers
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        scrape()
+        scheduler = BlockingScheduler()
+        scheduler.add_job(scrape, "interval", minutes=5)
+        scheduler.start()
 
 
 def scrape():
