@@ -7,13 +7,10 @@ from core.news_scraper.scraper import scrapers
 class Command(BaseCommand):
     def handle(self, *args, **options):
         scheduler = BlockingScheduler()
-        scheduler.add_job(scrape, "interval", minutes=5)
+        scheduler.add_job(scrape, "interval", seconds=5)
         scheduler.start()
 
 
 def scrape():
         for scraper in scrapers:
-            try:
-                scraper.scrape()
-            except:
-                print("An exception occurred")
+            scraper.scrape()
