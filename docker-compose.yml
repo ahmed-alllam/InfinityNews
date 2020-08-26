@@ -1,0 +1,44 @@
+
+version: '3'
+
+services:
+  django:
+    build:
+      context: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/InfinityNews
+    command: >
+      sh -c "python3 manage.py makemigrations &&
+      python3 manage.py migrate &&
+      gunicorn --bind 0.0.0.0:5000 manage:app"
+    environment:
+      - DB_HOST=postgresdb
+      - DB_NAME=infinitynewsdb
+      - DB_USER=postgresdb
+      - DB_PASS=${DBPASSWORD}
+      - HOST_NAME=${HOSTNAME}
+    depends_on:
+      - postgresdb
+  postgresdb:
+    image: postgres:12.1-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=infinitynewsdb
+      - POSTGRES_USER=postgresdb
+      - POSTGRES_PASSWORD=${DBPASSWORD}
+  nginx:
+    build:
+      ./nginx
+    volumes:
+      - ./media:/infinitynews/media
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    environment:
+      - HOST_NAME=${HOSTNAME}
+    ports:
+      - 80:80
+    depends_on:
+      - django
+
