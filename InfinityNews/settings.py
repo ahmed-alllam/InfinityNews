@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+import django_heroku
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -23,8 +24,6 @@ SECRET_KEY = 'r^rl3u-4#1(m2!n=%aza94*zc8u658ab)*8ysylp&hn8!k_k99'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
-
-ALLOWED_HOSTS = (os.environ.get('HOST_NAME'),)
 
 # Application definition
 
@@ -52,6 +51,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+django_heroku.settings(locals())
+
+
 ROOT_URLCONF = 'InfinityNews.urls'
 
 TEMPLATES = [
@@ -72,18 +74,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'InfinityNews.wsgi.application'
 
-# Database
-# https://docs.djangoproject.com/en/3.0/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'HOST': os.environ.get('DB_HOST'),
-        'NAME': os.environ.get('DB_NAME'),
-        'USER': os.environ.get('DB_USER'),
-        'PASSWORD': os.environ.get('DB_PASS'),
-    }
-}
 
 AUTH_USER_MODEL = 'users.UserProfile'
 
