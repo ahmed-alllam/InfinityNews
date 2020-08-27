@@ -52,14 +52,14 @@ class Category(models.Model):
 
 
 class PostTag(models.Model):
-    tag = models.CharField(max_length=30, unique=True)
+    tag = models.CharField(max_length=255, unique=True)
 
     def __str__(self):
         return self.tag
 
 
 class Post(models.Model):
-    slug = models.SlugField(allow_unicode=True, db_index=True, unique=True, max_length=255)
+    slug = models.SlugField(allow_unicode=True, db_index=True, unique=True, max_length=1024)
     source = models.ForeignKey(Source, on_delete=models.CASCADE, related_name='posts')
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='posts')
     tags = models.ManyToManyField(PostTag, related_name='posts')
