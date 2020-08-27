@@ -86,9 +86,13 @@ class BaseNewsScraper(ABC):
         thumbnail = self.get_post_thumbnail(post_container, detailed_post_container)
         full_image = self.get_post_full_image(post_container, detailed_post_container) or thumbnail
 
+        print('Scraped post from ' + source.title + ' with title: ' + title)
+
         body = self.get_post_body(detailed_post_container)
         if body:
             body = self.format_post_body(body)
+
+        print('Body ' + body)
 
         timestamp = self.get_post_utc_timestamp(post_container, detailed_post_container)
         tags = [PostTag.objects.get_or_create(tag=tag)[0]

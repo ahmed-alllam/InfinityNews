@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 
 import os
 
-import django_heroku
+import dj_database_url
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -22,6 +22,11 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'r^rl3u-4#1(m2!n=%aza94*zc8u658ab)*8ysylp&hn8!k_k99'
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = False
+
+ALLOWED_HOSTS = ['https://vast-caverns-12592.herokuapp.com']
 
 # Application definition
 
@@ -67,13 +72,11 @@ TEMPLATES = [
     },
 ]
 
-django_heroku.settings(locals())
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
-
 WSGI_APPLICATION = 'InfinityNews.wsgi.application'
 
+DATABASES = {
+    'default': dj_database_url.config()
+}
 
 AUTH_USER_MODEL = 'users.UserProfile'
 
