@@ -16,4 +16,4 @@ def scrape():
             try:
                 scraper.scrape()
             except Exception as e:
-                print("An exception occurred" + e)
+                print("An exception occurred" + str(e))
