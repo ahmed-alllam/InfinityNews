@@ -85,7 +85,11 @@ class BaseNewsScraper(ABC):
         description = self.get_post_description(post_container, detailed_post_container)
         thumbnail = self.get_post_thumbnail(post_container, detailed_post_container)
         full_image = self.get_post_full_image(post_container, detailed_post_container) or thumbnail
+
         body = self.get_post_body(detailed_post_container)
+        if body:
+            body = self.format_post_body(body)
+
         timestamp = self.get_post_utc_timestamp(post_container, detailed_post_container)
         tags = [PostTag.objects.get_or_create(tag=tag)[0]
                 for tag in self.get_post_tags(post_container, detailed_post_container)]
@@ -137,8 +141,9 @@ class BaseNewsScraper(ABC):
         if self.body_attr_name and self.body_attr_value:
             attrs = {self.body_attr_name: re.compile(self.body_attr_value + '.*')}
 
-        body = post_page.find(self.body_tag_name, attrs)
+        return post_page.find(self.body_tag_name, attrs) or ''
 
+    def format_post_body(self, body):
         for tag in body.find_all(re.compile("div|span|p")):
             text = tag.text
             if not text or (isinstance(text, str) and not text.strip()):
@@ -416,7 +421,7 @@ class FoxNewsScraper(JsonNewsScraper):
         return urljoin(self.base_url, ('api/article-search?isCategory=true&isTag=false' +
                                        '&isKeyword=false&isFixed=false&isFeedUrl=false&' +
                                        'searchSelected={}&contentTypes=%7B%22interactive' +
-                                       '%22:false,%22slideshow%22:false,' +
+                                       '%22:false,%22slideshow%22:false,%video%22:false,' +
                                        '%22article%22:true%7D&size=30').format(category_name))
 
     def get_page_url_at_index(self, url, index):
