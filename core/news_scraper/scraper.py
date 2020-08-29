@@ -92,8 +92,6 @@ class BaseNewsScraper(ABC):
         if body:
             body = self.format_post_body(body)
 
-        print('Body ' + body)
-
         timestamp = self.get_post_utc_timestamp(post_container, detailed_post_container)
         tags = [PostTag.objects.get_or_create(tag=tag)[0]
                 for tag in self.get_post_tags(post_container, detailed_post_container)]
@@ -420,6 +418,10 @@ class FoxNewsScraper(JsonNewsScraper):
     def get_post_tags(self, post_container, detailed_post_container):
         return [post_container.get('category', {}).get('name', ''), ]
 
+    def format_post_body(self, body):
+        [tag.extract() for tag in body.select(".ad-container").extend(body.select(".featured-video"))]
+        return super().format_post_body(body)
+
     def get_category_url(self, title, url):
         category_name = self.categories[title]
         return urljoin(self.base_url, ('api/article-search?isCategory=true&isTag=false' +
@@ -458,7 +460,7 @@ class FoxBusinessScraper(HtmlNewsScraper):
                                   {self.tags_attr_name:
                                        re.compile(self.tags_attr_value + '.*')})
 
-        return (tag.text.strip()) if tag else ()
+        return [tag.text.strip()] if tag else []
 
     def get_page_url_at_index(self, url, index):
         return url
