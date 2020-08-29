@@ -8,7 +8,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         for index, scraper in enumerate(scrapers):
             scheduler = BlockingScheduler()
-            scheduler.add_job(scrape, "interval", minutes=5 + (index * 2), args=scraper)
+            scheduler.add_job(scrape, "interval", minutes=5 + (index * 2), args=(scraper,))
             scheduler.start()
 
 
