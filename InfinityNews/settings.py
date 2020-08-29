@@ -24,7 +24,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = '*'
 
@@ -122,6 +122,9 @@ AWS_STORAGE_BUCKET_NAME = os.environ.get('S3_BUCKET')
 
 STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+AWS_S3_REGION_NAME = 'eu-west-3'
+AWS_S3_SIGNATURE_VERSION = 's3v4'
 
 AWS_DEFAULT_ACL = None
 
