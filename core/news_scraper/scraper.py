@@ -151,7 +151,7 @@ class BaseNewsScraper(ABC):
             if not text or (isinstance(text, str) and not text.strip()):
                 tag.extract()
 
-        [tag.extract() for tag in body.select("br:last-child")]
+        [tag.extract() for tag in body.select("br:last-child") or []]
 
         return body.prettify().strip() if body else ''
 
@@ -419,7 +419,7 @@ class FoxNewsScraper(JsonNewsScraper):
         return [post_container.get('category', {}).get('name', ''), ]
 
     def format_post_body(self, body):
-        [tag.extract() for tag in body.select(".ad-container").extend(body.select(".featured-video"))]
+        [tag.extract() for tag in body.select(".ad-container").extend(body.select(".featured-video")) or []]
         return super().format_post_body(body)
 
     def get_category_url(self, title, url):
@@ -427,7 +427,7 @@ class FoxNewsScraper(JsonNewsScraper):
         return urljoin(self.base_url, ('api/article-search?isCategory=true&isTag=false' +
                                        '&isKeyword=false&isFixed=false&isFeedUrl=false&' +
                                        'searchSelected={}&contentTypes=%7B%22interactive' +
-                                       '%22:false,%22slideshow%22:false,%video%22:false,' +
+                                       '%22:false,%22slideshow%22:false,%22video%22:false,' +
                                        '%22article%22:true%7D&size=30').format(category_name))
 
     def get_page_url_at_index(self, url, index):

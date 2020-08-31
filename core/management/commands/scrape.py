@@ -1,3 +1,6 @@
+import datetime
+import signal
+
 from apscheduler.schedulers.background import BackgroundScheduler
 from django.core.management import BaseCommand
 
@@ -8,16 +11,12 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         scheduler = BackgroundScheduler()
         scheduler.start()
-        for index, scraper in enumerate(scrapers):
-            scheduler.add_job(scrape, "interval", minutes=5, args=(scraper,))
+        for scraper in scrapers:
+            scheduler.add_job(scrape, "interval", minutes=5, args=(scraper,), next_run_time=datetime.datetime.now())
 
-        import signal
         signal.pause()
 
 
 def scrape(scraper):
-    try:
-        print("starting scraping " + scraper.title)
-        scraper.scrape()
-    except Exception as e:
-        print("An exception occurred" + str(e))
+    print("starting scraping " + scraper.title)
+    scraper.scrape()
