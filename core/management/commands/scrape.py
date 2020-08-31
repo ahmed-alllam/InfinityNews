@@ -11,6 +11,9 @@ class Command(BaseCommand):
         for index, scraper in enumerate(scrapers):
             scheduler.add_job(scrape, "interval", minutes=5 + (index * 5), args=(scraper,))
 
+        input("Press enter to exit.")
+        scheduler.shutdown()
+
 
 def scrape(scraper):
     try:
