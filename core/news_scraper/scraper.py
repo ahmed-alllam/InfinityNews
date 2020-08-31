@@ -65,8 +65,7 @@ class BaseNewsScraper(ABC):
                     print("Error Parsing Post")
                     continue
 
-                if Post.objects.filter(source=source, category=category, title=post.title,
-                                       detail_url=post.detail_url):
+                if Post.objects.filter(source=source, category=category, detail_url=post.detail_url):
                     return posts, False
                 posts.append(post)
                 post.save()
@@ -291,6 +290,9 @@ class HtmlNewsScraper(BaseNewsScraper):
 
         full_image = detailed_post_container.find(self.full_image_tag_name, attrs)['src']
 
+        if not full_image:
+            return ''
+
         return urljoin(self.base_url, full_image)
 
     def get_post_timestamp(self, post_container, detailed_post_container):
@@ -356,7 +358,8 @@ class JsonNewsScraper(BaseNewsScraper):
         return urljoin(self.base_url, post_container.get(self.thumbnail_json_name, ''))
 
     def get_post_full_image(self, post_container, detailed_post_container):
-        return urljoin(self.base_url, post_container.get(self.full_image_json_name, ''))
+        image_url = post_container.get(self.full_image_json_name)
+        return urljoin(self.base_url, image_url) if image_url else ''
 
     def get_post_timestamp(self, post_container, detailed_post_container):
         return post_container.get(self.timestamp_json_name, '')
