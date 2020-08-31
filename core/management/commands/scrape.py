@@ -1,4 +1,4 @@
-from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 from django.core.management import BaseCommand
 
 from core.news_scraper.scraper import scrapers
@@ -6,10 +6,10 @@ from core.news_scraper.scraper import scrapers
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
+        scheduler = BackgroundScheduler()
+        scheduler.start()
         for index, scraper in enumerate(scrapers):
-            scheduler = BlockingScheduler()
-            scheduler.add_job(scrape, "interval", minutes=5 + (index * 2), args=(scraper,))
-            scheduler.start()
+            scheduler.add_job(scrape, "interval", minutes=5 + (index * 5), args=(scraper,))
 
 
 def scrape(scraper):
