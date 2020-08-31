@@ -9,7 +9,7 @@ class Command(BaseCommand):
         scheduler = BackgroundScheduler()
         scheduler.start()
         for index, scraper in enumerate(scrapers):
-            scheduler.add_job(scrape, "interval", minutes=5 + (index * 5), args=(scraper,))
+            scheduler.add_job(scrape, "interval", minutes=5, args=(scraper,))
 
         import signal
         signal.pause()
