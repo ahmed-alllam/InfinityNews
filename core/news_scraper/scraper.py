@@ -164,7 +164,7 @@ class BaseNewsScraper(ABC):
             full_body = body.prettify()
 
             required_style = """<style>:not(head) { max-width: 100%; object-fit: scale-down;
-                margin: auto; display:block;line-height: 1.8;} </style>"""
+                margin: auto; line-height: 1.8;} </style>"""
 
             return '<head>' + required_style + styles + '</head>' + '<body dir=\"auto\">' + full_body + '</body>'
         else:
@@ -307,10 +307,12 @@ class HtmlNewsScraper(BaseNewsScraper):
         if self.full_image_attr_name and self.full_image_attr_value:
             attrs = {self.full_image_attr_name: re.compile(self.full_image_attr_value + '.*')}
 
-        full_image = detailed_post_container.find(self.full_image_tag_name, attrs)['src']
+        full_image = detailed_post_container.find(self.full_image_tag_name, attrs)
 
         if not full_image:
             return ''
+
+        full_image = full_image['src']
 
         if full_image.startswith('http://'):
             full_image = full_image.replace('http://', 'https://')
@@ -454,9 +456,7 @@ class FoxNewsScraper(JsonNewsScraper):
 
     def format_post_body(self, body, styles):
         if body:
-            tags_to_extract = body.select(".ad-container")
-            tags_to_extract.extend(body.select(".featured-video"))
-            [tag.extract() for tag in tags_to_extract or []]
+            [tag.extract() for tag in body.select(".ad-container")]
 
         return super().format_post_body(body, styles)
 
