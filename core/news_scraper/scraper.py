@@ -89,7 +89,7 @@ class BaseNewsScraper(ABC):
 
         body = self.get_post_body(detailed_post_container)
         if body:
-            body = self.format_post_body(body)
+            body = self.format_post_body(*body)
 
         timestamp = self.get_post_utc_timestamp(post_container, detailed_post_container)
         tags = [PostTag.objects.get_or_create(tag=tag)[0]
@@ -142,17 +142,33 @@ class BaseNewsScraper(ABC):
         if self.body_attr_name and self.body_attr_value:
             attrs = {self.body_attr_name: re.compile(self.body_attr_value + '.*')}
 
-        return post_page.find(self.body_tag_name, attrs) or ''
+        post_body = post_page.find(self.body_tag_name, attrs) or ''
+        style_tags = post_page.find_all('link', rel="stylesheet")
+        style_tags.extend(post_page.find_all('style'))
 
-    def format_post_body(self, body):
-        for tag in body.find_all(re.compile("div|span|p")):
-            text = tag.text
-            if not text or (isinstance(text, str) and not text.strip()):
-                tag.extract()
+        styles = ''
+        for tag in style_tags:
+            styles += str(tag)
 
-        [tag.extract() for tag in body.select("br:last-child") or []]
+        return post_body, styles
 
-        return body.prettify().strip() if body else ''
+    def format_post_body(self, body, styles):
+        if body:
+            for tag in body.find_all(re.compile("div|span|p")):
+                text = tag.text
+                if not text or (isinstance(text, str) and not text.strip()):
+                    tag.extract()
+
+            [tag.extract() for tag in body.select("br:last-child") or []]
+
+            full_body = body.prettify()
+
+            required_style = """<style>:not(head) { max-width: 100%; object-fit: scale-down;
+                margin: auto; display:block;line-height: 1.8;} </style>"""
+
+            return '<head>' + required_style + styles + '</head>' + '<body dir=\"auto\">' + full_body + '</body>'
+        else:
+            return ''
 
     def get_post_utc_timestamp(self, post_container, detailed_post_container):
         timestamp = self.get_post_timestamp(post_container, detailed_post_container)
@@ -281,6 +297,9 @@ class HtmlNewsScraper(BaseNewsScraper):
 
         thumbnail = post_container.find(self.thumbnail_tag_name, attrs)['src']
 
+        if thumbnail.startswith('http://'):
+            thumbnail = thumbnail.replace('http://', 'https://')
+
         return urljoin(self.base_url, thumbnail)
 
     def get_post_full_image(self, post_container, detailed_post_container):
@@ -292,6 +311,9 @@ class HtmlNewsScraper(BaseNewsScraper):
 
         if not full_image:
             return ''
+
+        if full_image.startswith('http://'):
+            full_image = full_image.replace('http://', 'https://')
 
         return urljoin(self.base_url, full_image)
 
@@ -355,11 +377,20 @@ class JsonNewsScraper(BaseNewsScraper):
         return post_container.get(self.description_json_name, '')
 
     def get_post_thumbnail(self, post_container, detailed_post_container):
-        return urljoin(self.base_url, post_container.get(self.thumbnail_json_name, ''))
+        thumbnail = post_container.get(self.thumbnail_json_name, '')
+
+        if thumbnail.startswith('http://'):
+            thumbnail = thumbnail.replace('http://', 'https://')
+
+        return urljoin(self.base_url, thumbnail)
 
     def get_post_full_image(self, post_container, detailed_post_container):
-        image_url = post_container.get(self.full_image_json_name)
-        return urljoin(self.base_url, image_url) if image_url else ''
+        image_url = post_container.get(self.full_image_json_name, '')
+
+        if image_url.startswith('http://'):
+            image_url = image_url.replace('http://', 'https://')
+
+        return urljoin(self.base_url, image_url)
 
     def get_post_timestamp(self, post_container, detailed_post_container):
         return post_container.get(self.timestamp_json_name, '')
@@ -421,9 +452,13 @@ class FoxNewsScraper(JsonNewsScraper):
     def get_post_tags(self, post_container, detailed_post_container):
         return [post_container.get('category', {}).get('name', ''), ]
 
-    def format_post_body(self, body):
-        [tag.extract() for tag in body.select(".ad-container").extend(body.select(".featured-video")) or []]
-        return super().format_post_body(body)
+    def format_post_body(self, body, styles):
+        if body:
+            tags_to_extract = body.select(".ad-container")
+            tags_to_extract.extend(body.select(".featured-video"))
+            [tag.extract() for tag in tags_to_extract or []]
+
+        return super().format_post_body(body, styles)
 
     def get_category_url(self, title, url):
         category_name = self.categories[title]
