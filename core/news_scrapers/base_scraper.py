@@ -12,7 +12,7 @@ from news.models import Source, Post, PostTag, Category
 
 class BaseNewsScraper(ABC):
     def __init__(self, title, base_url, categories, time_between_requests=0,
-                 max_scraped_pages=2, timezone='EET', body_tag_name='',
+                 max_scraped_pages=1, timezone='EET', body_tag_name='',
                  body_attr_name='', body_attr_value=''):
         self.title = title
         self.base_url = base_url
