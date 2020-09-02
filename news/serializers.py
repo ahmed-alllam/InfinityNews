@@ -20,7 +20,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class SourceSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = ('title', 'image')
+        fields = ('title', 'image', 'website')
         model = Source
 
 
