@@ -85,7 +85,7 @@ class BaseNewsScraper(ABC):
         thumbnail = self.get_post_thumbnail(post_container, detailed_post_container)
         full_image = self.get_post_full_image(post_container, detailed_post_container) or thumbnail
 
-        print('Scraped post from ' + source.title + ' with title: ' + title)
+        print('Scraped post from: ' + source.title + ' in category: ' + category.title + ' with title: ' + title)
 
         body = self.get_post_body(detailed_post_container)
         if body:
@@ -143,7 +143,7 @@ class BaseNewsScraper(ABC):
             attrs = {self.body_attr_name: re.compile(self.body_attr_value + '.*')}
 
         post_body = post_page.find(self.body_tag_name, attrs) or ''
-        style_tags = post_page.find_all('link', rel="stylesheet")
+        style_tags = post_page.find_all('link')
         style_tags.extend(post_page.find_all('style'))
 
         styles = ''
@@ -388,6 +388,9 @@ class JsonNewsScraper(BaseNewsScraper):
 
     def get_post_full_image(self, post_container, detailed_post_container):
         image_url = post_container.get(self.full_image_json_name, '')
+
+        if not image_url:
+            return ''
 
         if image_url.startswith('http://'):
             image_url = image_url.replace('http://', 'https://')
