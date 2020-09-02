@@ -8,7 +8,7 @@ class ShoroukNewsScraper(HtmlNewsScraper):
         super().__init__(title='الشروق', base_url='https://www.shorouknews.com',
                          categories={'Egypt': 'egypt', 'Politics': 'Politics',
                                      'Sports': 'sports', 'Art': 'art', 'Money': 'Economy',
-                                     # 'Accidents': 'accidents', 'TV': 'tv', 'Woman': 'ladies',
+                                     # 'Accidents': 'accidents', 'TV': 'tv', ‫#‬ 'Woman': 'ladies',
                                      'Technology': 'variety/Internet-Comm', 'Science': 'variety/sciences',
                                      'Health': 'variety/health',
                                      # 'Cars': 'auto', 'Culture': 'Culture'
