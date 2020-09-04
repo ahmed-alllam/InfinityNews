@@ -65,14 +65,14 @@ class Post(models.Model):
     tags = models.ManyToManyField(PostTag, related_name='posts')
     title = models.CharField(max_length=1024)
     description = models.TextField()
-    thumbnail = models.URLField(null=True)
-    full_image = models.URLField(null=True)
-    detail_url = models.URLField()
+    thumbnail = models.URLField(null=True, max_length=2048)
+    full_image = models.URLField(null=True, max_length=2048)
+    detail_url = models.URLField(max_length=2048)
     body = models.TextField()
     timestamp = models.DateTimeField(null=True)
 
     class Meta:
-        ordering = ('category', '-timestamp',)
+        ordering = ('-timestamp',)
 
     def save(self, **kwargs):
         self.slug = unique_slugify(self, value=self.title)

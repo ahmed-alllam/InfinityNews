@@ -161,10 +161,14 @@ class BaseNewsScraper(ABC):
 
             full_body = body.prettify()
 
-            required_style = """<style>:not(head) { max-width: 100%; object-fit: scale-down;
-                margin: auto; line-height: 1.8;} </style>"""
+            required_style = '<style>:not(head) {background-color: white;} ' \
+                             'img, video, iframe {display: block; margin: auto; max-width: 100%; ' \
+                             'object-fit: scale-down;} </style>'
 
-            return '<head>' + required_style + styles + '</head>' + '<body dir=\"auto\">' + full_body + '</body>'
+            meta_tag = '<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">'
+
+            return '<!DOCTYPE html><html>' + meta_tag + '<head>' + styles + required_style + '</head>' \
+                   + '<body dir=\"auto\">' + full_body + '</body></html>'
         else:
             return ''
 

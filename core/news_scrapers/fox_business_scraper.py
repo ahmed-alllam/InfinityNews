@@ -29,5 +29,8 @@ class FoxBusinessScraper(HtmlNewsScraper):
 
         return [tag.text.strip()] if tag else []
 
+    def get_post_full_image(self, post_container, detailed_post_container):
+        return ''
+
     def get_page_url_at_index(self, url, index):
         return url
